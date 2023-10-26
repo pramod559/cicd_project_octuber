@@ -1,1 +1,13 @@
+name: build_upload_notify
 
+on:
+  push:
+    branches:
+      -master
+      -test
+
+
+jobs:
+  build_upload_notify:
+    name: build_upload_notify
+    runs-on: ubuntu        
