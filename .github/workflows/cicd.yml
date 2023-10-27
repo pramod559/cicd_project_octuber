@@ -25,5 +25,31 @@ jobs:
       - name: Get Today Date
         id: date
         run: echo "::set-output name=date::$(date +'%y-%m-%d')"                    
+      - name: Get Folder Id by condition
+        uses: haya14busa/action-cond@v1
+        id: folderId
+        with:
+          cond: ${{steps.branch.outputs.branch=='master'}}
+          if_true: ${{secrets.MASTERFOLDERID}}
+          if_false: ${{secrets.MASTERFOLDERID}}
+      - run: flutter pub get
+      - run: flutter build apk
+      - name: Archive Files
+        run: |
+          sudo apt-get update
+          sudo apt-get install zip
+          zip -r archive.zip *
+      - name: Upload apk to Google Drive
+        uses: adityak74/google-drive-upload-git-action@main
+        with: 
+          credentials: ${{secrets.CREDENTIALS}}
+          filename: "build/app/outputs/apk/release/app-release.apk"
+          folderId: ${{ steps.folderId.outputs.value}}
+          name: ${{ steps.branch.outputs.branch}}_apk_${{steps.date.outputs.date}}.apk
+          overwrite: "true"
+          mimeType: "application/vnd.android.package-archive"    
+
+      
+
 
 
