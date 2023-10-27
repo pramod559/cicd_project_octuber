@@ -5,6 +5,7 @@ on:
     branches:
       -master
       -test
+
       
 jobs:
   build_upload_notify:
