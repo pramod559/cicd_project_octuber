@@ -1,0 +1,70 @@
+---
+android-workflow:
+  environment:
+    cocoapods: default
+    flutter: stable
+    groups:
+      - google_credentions
+    vars:
+      FIREBASE_PROJECT: fe-community-dev
+    xcode: latest
+  instance_type: mac_mini_m1
+  max_build_duration: 120
+  name: Android Workflow
+  scripts:
+    - name: Get Flutter packages
+      script: |
+        flutter packages pub get 
+    - name: Build APK with Flutter
+      script: |
+        flutter build apk --debug
+    - name: Get Flutter packages
+      script: |
+        flutter packages pub get
+    - name: Create debug and test APK
+      script: |
+        set -ex
+        cd android  
+         
+         
+        
+workflows:
+  android-deploy-workflow:
+    artifacts:
+      - build/**/outputs/**/*.aab
+  publishing:
+    environment:
+      cocoapods: default
+      flutter: stable
+      groups:
+        - google_credentions
+      xcode: latest
+    google_play:
+      credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT
+      track: alpha
+    instance_type: mac_mini_m1
+    max_build_duration: 30
+    name: Android Deployment Workflow
+    publishing:
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT
+        track: alpha
+    scripts:
+      - name: Setup the keystore
+        script: |
+          echo $KEYSTORE_FILE | base64 --decode > /tmp/keystore.jks
+          cat >> "$CM_BUILD_DIR/android/key.properties << EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEYSTORE_KEY_PASSWORD
+          keyAlias=deployment_tutorial
+          storeFile=/tmp/keystore.jks
+          EOF
+      - name: Build AAB
+        script: |
+          cd "$CM_BUILD_DIR 
+          flutter packages pub get 
+          flutter build appbundle
+    triggering:
+      cancel_previous_builds: true
+      events:
+        - tag
